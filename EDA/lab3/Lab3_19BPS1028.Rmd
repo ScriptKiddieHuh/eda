@@ -1,0 +1,134 @@
+---
+title: "Lab3"
+author: "Sparsh Raj_19BPS1028"
+date: "19/02/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+data=read.csv("lab3.csv",header=TRUE)
+head(data)
+names(data)
+```
+
+## 1. Grand mean and mean of K
+```{r}
+
+gMean<- mean((data$Analytical.K+data$Exp.K+data$Inc.in.A.k+data$Inc.in.A.k))
+print(paste("Grand Mean of analytical and experimental K:", gMean))
+
+anaMean<-mean(data$Analytical.K)
+print(paste("Mean of analytical K:", anaMean))
+
+expMean<-mean(data$Exp.K)
+print(paste("Mean of experimental K:", expMean))
+
+anaIncMean<-mean(data$Inc.in.A.k)
+print(paste("Mean of analytical %incease K:", anaIncMean))
+
+expIncMean<-mean(data$Inc.in.E.k)
+print(paste("Mean of experimental %incease K:", expIncMean))
+```
+
+
+## 2. Sum of squares between and within
+```{r}
+library(plyr)
+n<-nrow(ddply(data, .(Analytical.K), nrow))
+
+ssc<- n*((anaMean-gMean)^2 + (expMean-gMean)^2 + (anaIncMean-gMean)^2 +(expIncMean-gMean)^2)
+print(paste("Sum of Squares between: ", ssc))
+
+sse1<- (data$Analytical.K-anaMean)^2
+sse2<- (data$Inc.in.A.k-anaIncMean)^2
+sse3<- (data$Exp.K-expMean)^2
+sse4<- (data$Inc.in.E.k-expIncMean)^2
+
+sse<- sum(sse1)+sum(sse2)+sum(sse3)+sum(sse4)
+
+print(paste("Sum of Squares within: ", sse))
+```
+
+## 3. Degress of freedom
+```{r}
+dfB<-(ncol(data)-1)-1
+dfW<-(n*(ncol(data)-1))-(ncol(data)-1)
+dfT<-(n*(ncol(data)-1))-1
+
+print(paste("Degrees of freedom between: ",dfB))
+
+print(paste("Degrees of freedom within: ",dfW))
+
+print(paste("Degrees of freedom total: ",dfT))
+```
+
+
+# 4. Mean squares between and within
+```{r}
+msc<-ssc/dfB
+print(paste("Mean square between: ",msc))
+
+mse<-sse/dfW
+print(paste("Mean square within: ",mse))
+```
+
+# 5. F-statistic and F-critical
+```{r}
+fStat<-msc/mse
+print(paste("F-statistic: ",fStat))
+
+fCrit<-qf(0.05, dfB, dfW, lower.tail=TRUE)
+print(paste("F-Critical: ",fCrit))
+```
+
+# 6. Null Hypothesis result
+```{r}
+print("Since, f-statistic is greater than f-critical, null hypotheseis is rejected. Therefore the given dataset belong to different samples.")
+```
+
+
+# 7. Plot Vol. Concentration VS Thermal Conductivity
+```{r}
+library("ggplot2")
+ggplot(data,aes(x=Conc,y=Analytical.K))+geom_point()
+```
+
+
+```{r}
+library("ggplot2")
+ggplot(data,aes(x=Conc,y=Exp.K))+geom_point()
+```
+
+# 8. Plot Vol Concentration Vs % increase in Thermal conductivity –(In bar chart)
+```{r}
+barplot(data$Conc,names.arg=data$Inc.in.A.k,xlab="Concentration",ylab="Analytical% increase K",col="blue",
+main="Revenue chart",border="red")
+```
+
+```{r}
+barplot(data$Conc,names.arg=data$Inc.in.E.k,xlab="Concentration",ylab="Exp % increase K",col="yellow",border="orange")
+```
+
+
+# 9. Error (Measured Value-Analytical Value)
+```{r}
+err<- data$Exp.K - data$Analytical.K
+print("Error: (Measured value - Analytical value): ")
+err
+
+incErr <- data$Inc.in.E.k - data$Inc.in.A.k
+print("%increase Error: (Measured value - Analytical value): ")
+incErr
+```
+
+
+
+
+
+

@@ -1,0 +1,99 @@
+---
+title: "LAB2_CSE3506"
+author: "Sparsh Raj_19BPS1028"
+date: "29/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+data=read.csv("SolarPond.csv",header=TRUE)
+head(data)
+```
+
+
+## Data Sampling
+```{r}
+data1<-data[1:5,]
+data2<-data[6:15,]
+data3<-data[15:26,]
+
+data1
+data2
+data3
+```
+
+
+## Task1
+```{r}
+rbind (data1, data2)
+```
+
+## Task2
+```{r}
+v1<-data$LCZ0
+v2<-data$LCZ3
+v3<-data$LCZ5
+
+cbind(v1,v2,v3)
+```
+
+
+## Task3
+```{r}
+library("ggplot2")
+ggplot(data,aes(x=Time,y=May))+geom_point()
+```
+
+
+## Task4
+```{r}
+library("ggplot2")
+ggplot(data,aes(x=Two0,y=May))+geom_point()
+```
+
+## Task5
+```{r}
+library("ggplot2")
+ggplot(data,aes(x=W0,y=May))+geom_point()
+```
+
+
+
+## Task6
+```{r}
+library("ggplot2")
+ggplot(data,aes(x=T10,y=May))+geom_point()
+```
+
+## Task7: Best Linear Fit
+```{r}
+blf<-lm(data3$May~data3$E0)
+summary(blf)
+```
+
+## Task8: Plot Best 
+```{r}
+plot(data$E0,data$May,col = "red",main = "Pyranometer Vs Effectiveness(TT=0)",
+abline(lm(data$May~data$E0)),cex = 1.3,pch = 16,xlab = "Pyranometer (May)",ylab = "Effectiveness (TT=0)")
+```
+
+## Task9: Residual Sum of Squares
+```{r}
+res<-sum(resid(blf)^2)
+res
+```
+
+## Task10: Plot the residuals
+```{r}
+res=resid(blf)
+length(res)
+plot(data3$E0[1:11], res, ylab="Residuals", xlab="Effectiveness (TT=0)", main="Best Linear Fit Residuals",col="red") 
+abline(0, 0)  
+```
+

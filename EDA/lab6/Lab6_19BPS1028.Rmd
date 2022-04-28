@@ -1,0 +1,66 @@
+---
+title: "Lab6_Naive Baye's Classifier"
+author: "Sparsh Raj_19BPS1028"
+date: "02/03/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+# Loading training and test data sets onto R
+```{r}
+data<-read.csv("train.csv")
+str(data)
+```
+
+
+# Splitting data into training and testing set
+```{r}
+data2<-sample(2,nrow(data),replace=T,prob = c(0.75,0.25))
+train<-data[data2==1,]
+test<-data[data2==2,]
+head(train)
+head(test)
+
+colnames(train) <- tolower(colnames(train))
+
+colnames(test) <- tolower(colnames(test))
+```
+
+# Data Cleaning
+
+```{r}
+clean_variable <- function(df, variable, group, lookup_table){
+    df[variable] <- apply(df[, c(variable, group)], 1, FUN=function(x) {if (is.na(x[1]) | x[1]==0) return(lookup_table[lookup_table[group]==x[2], variable]) else return(x[1])})
+    return(df)
+}
+fare_pclass <- aggregate(fare ~ pclass, data=train, FUN=mean)
+train <- clean_variable(train, "fare", "pclass", fare_pclass)
+test <- clean_variable(test, "fare", "pclass", fare_pclass)
+```
+
+
+# Naive Baye's Classifier
+```{r}
+library(naivebayes)
+library(caret)
+train$survived<-as.factor(train$survived)
+test$survived<-as.factor(test$survived)
+model<-naive_bayes(survived ~ pclass + sex + age + sibsp + parch + fare, data=train)
+summary(model)
+pred<-predict(model,train)
+head(pred)
+
+pred<-as.factor(pred)
+
+n<-length(test$survived)
+pred<-pred[0:n]
+
+length(test$survived)
+confusionMatrix(test$survived, pred)
+```

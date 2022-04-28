@@ -1,0 +1,61 @@
+---
+title: "LAB1_CSE3506"
+author: "Sparsh Raj_19BPS1028"
+date: "29/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+rm(list=ls()) 
+library(dplyr)
+
+data=read.csv("CreditWorthiness.csv",header=TRUE)
+data <- sample_n(data,15)
+head(data)
+```
+
+
+###GGPlot and Correlation calculation
+```{r}
+library("ggplot2")         
+ggplot(data,aes(x=Cdur,y=Camt))+geom_point()
+cor.test(data$Camt,data$age)   
+
+```
+
+
+###Linear Regression
+```{r}
+slr = lm(age~Camt, data) 
+summary(slr)
+
+```
+
+
+```{r}
+plot(slr$resid)
+```
+
+```{r}
+qqnorm(slr$resid)  
+```
+
+###Multiple Regression
+
+```{r}
+mlr = lm(age~Cdur+Camt+InRate+NumCred, data) 
+summary(mlr)
+plot(mlr$resid)  
+
+```
+
+
+```{r}
+qqnorm(mlr$resid)   
+```

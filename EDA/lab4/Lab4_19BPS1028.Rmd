@@ -1,0 +1,110 @@
+---
+title: "Lab4"
+author: "Sparsh Raj_19BPS1028"
+date: "19/02/2022"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+# 1. Import dataset and display it and check for unfilled data.
+```{r}
+library(tseries)
+library(forecast)
+
+data<-AirPassengers
+data
+
+sum(is.na(data))
+```
+
+
+# 2. Display the statistical info of the dataset such as min, max, 1st quartile, 3rd quartile, mean and median.
+```{r}
+dMin<-min(data)
+print(paste("Min = ",dMin))
+
+dMax<-max(data)
+print(paste("Max = ",dMax))
+
+dMean<-mean(data)
+print(paste("Mean = ",dMean))
+
+dMed<-median(data)
+print(paste("Median = ",dMed))
+
+quan<-quantile(data)
+print("Quartiles are = ")
+quan
+```
+
+# 3. Plot data
+```{r}
+plot(data,xlab="Date", ylab = "Passenger numbers (1000's)",main="Air Passenger numbers from 1949 to 1961")
+```
+
+# 4. Plot as timeseries ‘data’ (monthwise)
+
+```{r}
+boxplot(data~cycle(data),xlab="Date", ylab = "Passenger Numbers (1000's)" ,main ="Monthly Air Passengers Boxplot from 1949 to 1961")
+```
+
+
+# 5. Decompose the data as multiplicative and store as ‘ddata’
+```{r}
+ddata <- decompose(data,"multiplicative")
+```
+
+
+# 6. & 7. Plot ddata and also plot the following: trend, seasonal and random.
+```{r}
+autoplot(ddata)
+```
+
+
+# 8. Perform ADF test for stationarity.
+```{r}
+adf.test(data) 
+```
+ 
+
+# 9. Plot ACF and PACF
+
+
+Correlogram of Air Passengers from 1949 to 1961
+```{r}
+autoplot(acf(data,plot=FALSE)) 
+```
+
+Review random time series for any missing values
+```{r}
+ddata$random
+```
+
+
+Correlogram of Air Passengers Random Component from 1949 to 1961
+
+
+Autoplot the random time series from 7:138 which exclude the NA values
+```{r}
+autoplot(acf(ddata$random[7:138],plot=FALSE)) 
+```
+
+
+
+# 10. Model using ARIMA
+```{r}
+fitData <- auto.arima(data)
+fitData
+
+library(ggfortify)
+ggtsdiag(fitData)
+```
+

@@ -1,0 +1,133 @@
+---
+title: "Lab5_Logistic Regression"
+author: "Sparsh Raj_19BPS1028"
+date: "22/02/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+# Loading training and test data sets onto R
+```{r}
+train<-read.csv("train.csv")
+test<-read.csv("test.csv")
+str(train)
+str(test)
+```
+
+
+```{r}
+colnames(train) <- tolower(colnames(train))
+colnames(test) <- tolower(colnames(test))
+```
+
+
+# Data Cleaning
+
+```{r}
+clean_variable <- function(df, variable, group, lookup_table){
+    df[variable] <- apply(df[, c(variable, group)], 1, FUN=function(x) {if (is.na(x[1]) | x[1]==0) return(lookup_table[lookup_table[group]==x[2], variable]) else return(x[1])})
+    return(df)
+}
+fare_pclass <- aggregate(fare ~ pclass, data=train, FUN=mean)
+train <- clean_variable(train, "fare", "pclass", fare_pclass)
+test <- clean_variable(test, "fare", "pclass", fare_pclass)
+```
+
+# Missing data imputation: Filling missing age values with median value
+```{r}
+age_sex <- aggregate(age ~ sex, data=train, FUN=median)
+train <- clean_variable(train, "age", "sex", age_sex)
+test <- clean_variable(test, "age", "sex", age_sex)
+```
+
+
+# Subsetting cross validation set from training set.
+```{r}
+train$age <- as.numeric(train$age)
+train$fare <- as.numeric(train$fare)
+train$pclass <- as.factor(train$pclass)
+size_train <- nrow(train)
+sample_index <- sample.int(size_train, size = floor(0.4*size_train))
+cv <- train[sample_index,]
+train_new <- train[setdiff(seq(1:size_train), sample_index), ] 
+```
+
+
+# Modelling the training set.
+```{r}
+library(aod)
+mylogit <- glm(survived ~ pclass + sex + age + sibsp + parch + fare, family=binomial(link=), data=train_new)
+```
+
+
+# Check data fitting for training set and cross validation set.
+```{r}
+predict_survive <- function(mylogit, df, prob){
+    predict_s <- predict(mylogit, newdata=df, type="response")
+    return(sapply(predict_s, FUN=function(x){if (x>prob) return(1) else return(0)}))
+}
+```
+
+
+```{r}
+threshold_parameter <- function(mylogit, df, parameter_set){
+    predict_err <- parameter_set
+    k=0
+    for (par in parameter_set){
+        k <- k + 1
+        predict_df <- predict_survive(mylogit, df, par)
+        predict_err[k] <-  sum((predict_df - df$survived)^2)
+    }
+    index <- order(predict_err)[1]
+    return(parameter_set[index])
+}
+```
+
+```{r}
+par_set <- seq(0.1,0.9,0.05)
+best_prob <- threshold_parameter(mylogit, cv, par_set) 
+predict_cv <- predict_survive(mylogit, cv, best_prob)
+predict_cv_error <- sum((predict_cv-cv$survived)^2)/nrow(cv)
+predict_train <- predict_survive(mylogit, train_new, best_prob)
+predict_train_error <- sum((predict_train-train_new$survived)^2)/nrow(train_new)
+```
+
+
+
+# Prediction based on test set.
+```{r}
+test$age <- as.numeric(test$age)
+test$fare <- as.numeric(test$fare)
+test$pclass <- as.factor(test$pclass)
+test$survived <- predict_survive(mylogit, test, best_prob)
+pred <- test[c("passengerid", "survived")]
+colnames(pred) <- c("PassengerId", "Survived")
+
+pred
+```
+
+
+```{r}
+library(naivebayes)
+train$survived<-as.factor(train$survived)
+test$survived<-as.factor(test$survived)
+myClassifier <- naive_bayes(survived ~ pclass + sex + age + sibsp + parch + fare, data=train)
+test$age <- as.numeric(test$age)
+test$fare <- as.numeric(test$fare)
+test$pclass <- as.factor(test$pclass)
+#test$survived <- predict_survive(mylogit, test, best_prob)
+
+summary(myClassifier)
+pred<-predict(myClassifier,test)
+head(pred)
+
+pred<-as.factor(pred)
+confusionMatrix(test$survived, pred)
+```
+
